@@ -17,8 +17,27 @@ void init(){
 	depth = 0;
 }
 
+void read_write() {
+	struct Node node;
+	strcpy(node.text,"read");
+	node.line = 0;
+	strcpy(node.type,"ID");
+	node.child = NULL;
+	node.sibling = NULL;
+	enum varType type;
+	type = varInt;
+	newFun(&node,type,NULL,0);
+	strcpy(node.text,"write");
+	struct argList *p = (struct argList*)malloc(sizeof(struct argList));
+	p->next = NULL;
+	p->aType = varInt;
+	newFun(&node,type,p,1);
+}
+
+
 void semantic(){
 	init();
+	read_write();
 	Program(start);
 //	printSTable();
 //	printStructTable();
@@ -1025,4 +1044,95 @@ void newFun(struct Node *node,enum varType type,struct argList *arg,int argNum){
 		newFunc->next = fTable[hashFun];
 		fTable[hashFun] = newFunc;
 	}
+}
+
+int getVarID(struct Node *node) {
+	if (node == NULL || strcmp(node->type,"ID") != 0) {
+		printf("the node is not a ID\n");
+		return -1;
+	}
+	unsigned int hash = getHash(node->text);
+	struct singleSymbol *temp = sTable[hash];
+	while (temp != NULL) {
+		if (temp->sym.funcOrVar == 1 && strcmp(node->text,temp->sym.name) == 0)
+			return temp->sym.message.vmes->var_no;
+		temp = temp->next;
+	}
+	return -1;
+}
+
+union varp getVar(struct Node *node,enum varType *type) {
+	if (node == NULL || strcmp(node->type,"ID") != 0) {
+		printf("the node is not a ID\n");
+		*type = varError;
+		union varp r;
+		r.sp = NULL;
+		return r;
+	}
+	unsigned int hash = getHash(node->text);
+	struct singleSymbol *temp = sTable[hash];
+	struct singleSymbol *find = NULL;
+	while (temp != NULL) {
+		if (temp->sym.funcOrVar == 1 && strcmp(node->text,temp->sym.name) == 0)
+			find = temp;
+		temp = temp->next;
+	}
+	union varp r;
+	if (find == NULL) {
+		*type = varError;
+		r.sp = NULL;
+	}
+	else {
+		*type = find->sym.message.vmes->vType;
+		r = find->sym.message.vmes->tp;
+	}
+	return r;
+}
+
+struct funMes *getFunMes(struct Node *node) {
+	if (node == NULL || strcmp(node->type,"ID") != 0) {
+		printf("the node is not a ID from getFunMes\n");
+		return NULL;
+	}
+	unsigned int hash = getHash(node->text);
+	struct singleSymbol *temp = fTable[hash];
+	while (temp != NULL) {
+//		printf("%s %s\n",temp->sym.name,node->text);
+		if (strcmp(temp->sym.name,node->text) == 0) {
+			if (temp->func == NULL)	printf("hehehehe\n");
+			return temp->func;
+		}
+		temp = temp->next;
+	}
+	return NULL;
+}
+
+int getVarIDbyName(char *name) {
+	if (name == NULL || strlen(name) == 0) {
+		printf("name is empty at getVarIDbyName\n");
+		return -1;
+	}
+	unsigned int hash = getHash(name);
+	struct singleSymbol *temp = sTable[hash];
+	while (temp != NULL) {
+		if (temp->sym.funcOrVar == 1 && strcmp(temp->sym.message.vmes->name,name) == 0)
+			return temp->sym.message.vmes->var_no;
+		temp = temp->next;
+	}
+	return -1;
+}
+
+int getFlag(char *name) {
+	if (name == NULL || strlen(name) == 0) {
+		printf("name is empty at getFlag\n");
+		return -1;
+	}
+	unsigned int hash = getHash(name);
+	struct singleSymbol *temp = sTable[hash];
+	while (temp != NULL) {
+		if (temp->sym.funcOrVar == 1 && strcmp(temp->sym.message.vmes->name,name) == 0) 
+			return temp->flag;
+		temp = temp->next;
+	}
+	return -3;
 }

@@ -1,10 +1,10 @@
 struct Node{
 	int tokenFlag;
 	int line;
-	char type[32];
-	char text[32];
 	struct Node *child;
 	struct Node *sibling;
 	struct Node *parent;
+	char type[33];
+	char text[33];
 };
 

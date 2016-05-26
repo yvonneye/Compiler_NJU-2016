@@ -3,7 +3,12 @@
 #include <assert.h>
 #include  "node.h"
 enum varType{
-	varInt,varFloat,varArray,varStruct
+	varInt,varFloat,varArray,varStruct,varError
+};
+
+union varp {
+	struct structure *sp;
+	struct arrayMes *ap;
 };
 
 struct argList{
@@ -21,10 +26,20 @@ struct array{
 	struct array *next;
 };
 
+struct arrayMes {
+	int size;
+	enum varType basetype;
+	union varp base;
+	union varp nextdim;
+};
+
 struct varMes{
 	enum varType vType;
+	char *name;
 	struct array *vArray;
+	int var_no;
 	int deminsion;
+	union varp tp;
 };
 
 struct funMes{
@@ -49,6 +64,7 @@ struct symbol{
 struct structure{
 	char name[32];		
 	struct argList *structMember;
+	struct singleSymbol *memlist;
 	struct structure *next;
 	int flag;//flag 0 is OptTag, 1 is Tag
 	int varOrStruct;//0 is var,1 is struct
@@ -59,9 +75,11 @@ struct structure{
 
 struct singleSymbol{
 	struct symbol sym;
+	int flag;
 	struct singleSymbol *next;
 	char structName[32];
 	struct argList *structMember;
+	struct funMes *func;
 	int depth;
 	int fail;//0 is live,1 is death
 };
@@ -69,6 +87,7 @@ struct singleSymbol{
 //struct func
 
 extern void init();
+extern void read_write();
 extern void semantic();
 //Hign-level Definitions
 extern void Program(struct Node *node);
@@ -109,4 +128,9 @@ extern void newVar(struct Node *node,enum varType type,struct array *vArray,stru
 extern void newFun(struct Node *node,enum varType type,struct argList *arg,int argNum);
 extern void printSTable();
 extern void printStructTable();
+extern int getVarID(struct Node *node);
+extern int getVarIDbyName(char *name);
+extern int getFlag(char *name);
+extern union varp getVar(struct Node *node,enum varType *type);
+extern struct funMes *getFunMes(struct Node *node);
 #endif
